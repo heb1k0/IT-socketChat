@@ -12,7 +12,7 @@ const { Register, Login,CheckToken  }= require('./controllers/users');
 
 const io = new Server(server,{
   cors:{
-    origin: 'http://localhost:3000',
+    origin: 'http://139.59.149.58:3000',
     methods:["GET","POST"]
   }
 });
