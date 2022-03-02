@@ -6,7 +6,8 @@ exports.createRoom = async (req) =>{
     try{
 
         let result = await new Room({
-            name: req.sala
+            name: req.name,
+            users: req.users
         });
         await result.save()
         return result;
@@ -19,7 +20,6 @@ exports.createRoom = async (req) =>{
 }
 exports.listRooms = async () =>{
 
-    console.log("goo")
     
        try{
             return await Room.find();

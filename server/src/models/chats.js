@@ -4,12 +4,14 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const RoomSchema = new Schema({
-  name: { type: String },
-  user: { type: Array },
+const ChatSchema = new Schema({
+  username: { type: String },
+  idUser: { type: String},
+  idRoom: { type: String },
+  mensaje: { type: String},
   created: { type: Date,default: new Date() },
 });
 
 // Compile model from schema
-const Room = mongoose.model('Room', RoomSchema);
+const Room = mongoose.model('Chat', ChatSchema);
 module.exports = Room;

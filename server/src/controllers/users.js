@@ -13,41 +13,39 @@ exports.Register = async (req, res) => {
             email: req.email,
             password: password
         });
-        await result.save()
-        console.log(result)
-        res.status(200).json(result);
+        const token = jwt.sign({
+            name:result.username,
+            id:result._id
+        }, "secretKey123")
+
+        result.token = token;
+        await result.save();
+        return result;
 
     } catch (err) {
-        res.status(500).json({ msj: err.message });
+        return { error:true };
     }
 }
 
-exports.RegisterGoogle = async (req, res) => {
-
-    // req profileObj: {
-    //     googleId: '111374163267793641055',
-    //     imageUrl: 'https://lh3.googleusercontent.com/a-/AOh14Gi-tP_jG_h9A5-tMtqGBlx8kVBocxbMk9n6R_tRBQ=s96-c',
-    //     email: 'alejandrozuriguel@gmail.com',
-    //     name: 'Alejandro Zuriguel',
-    //     givenName: 'Alejandro',
-    //     familyName: 'Zuriguel'
-
+exports.RegisterGoogle = async (req) => {
 
     try {
-        const user = await User.findOne({ email: req.profileObj.email });
+        const user = await User.findOne({ email: req.email});
 
         if (!user) {
-            console.log("entro aqui")
+        
+            console.log("entro aqui", req)
             const salt = await bcrypt.genSalt(10);
-            const password = await bcrypt.hash(req.profileObj.email, salt);
+            const password = await bcrypt.hash(req.email, salt);
 
             let result = await new User({
-                email: req.profileObj.email,
+                username: req.username,
+                email: req.email,
                 password: password
             });
             await result.save()
             console.log(result)
-            res.status(200).json(result);
+            return result;
 
         } else {
 
@@ -56,28 +54,29 @@ exports.RegisterGoogle = async (req, res) => {
                 id: user._id
             }, "secretKey123")
 
+            console.log(token)
+
             user.token = token;
             user.save();
-            res.status(200).json(user);
+            return user;
         }
 
     } catch (err) {
-        console.log(err.message)
-        res.status(500).json({ msj: err.message });
+        console.log("error",err.message)
+        return { msj: err.message };
     }
 }
 
 exports.Login = async (req, res) => {
 
     try {
-
         const user = await User.findOne({ username: req.username });
         if (!user) {
-            res.status(404).json({ msj: "Usuario no encontrado" });
+            return { msj: "Usuario no encontrado" };
         } else {
             const validPass = await bcrypt.compare(req.password, user.password);
             if (!validPass) {
-                res.status(401).json({ msj: "Contraseña incorrecta" });
+                return { msj: "Contraseña incorrecta" };
             } else {
 
                 const token = jwt.sign({
@@ -88,39 +87,43 @@ exports.Login = async (req, res) => {
                 user.token = token;
                 await user.save();
 
-                res.status(200).json({ username: user.username, token: token });
+                console.log(token)
+
+                return { username: user.username, token: token };
             }
         }
     } catch (err) {
-        console.log(err);
-        res.status(500).json({ msj: err.message });
+        return { msj: err.message };
     }
 }
 
 exports.CheckToken = async (req, res) => {
 
     try {
+        console.log(req)
 
-
-        if(req.token){
-            console.log(req.token,"<- token")
+        if(req){
+            console.log(req,"<- token")
         }else{
             console.log("no hay token")
         }
         
 
-        const verified = jwt.verify(req.token, "secretKey123")
+        const verified = jwt.verify(req, "secretKey123")
 
-        const user = await User.findOne({ token: req.token, _id: verified.id });
+        console.log(verified,"<- verified")
 
-        if (user.token == req.token && user._id == verified.id) {
-            res.status(200).json(user);
+        const user = await User.findOne({ token:req , _id: verified.id });
+        console.log(user,"<- user")
+
+        if (user.token == req && user._id == verified.id) {
+            return user
         } else {
-            res.status(401).json({ msj: "Token Invalid" });
+            return {errj: "Token Invalid" };
         }
 
     } catch (err) {
         console.log(err.message," ERROR ");
-        res.status(500).json({ err: err.message });
+        return { err: err.message };
     }
 }
