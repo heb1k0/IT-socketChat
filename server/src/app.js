@@ -14,7 +14,7 @@ var controller = require('./controllers/sockets');
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'http://127.0.0.1:3000',
     methods: ["GET", "POST"]
   }
 });
