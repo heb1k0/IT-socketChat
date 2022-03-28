@@ -49,9 +49,10 @@ cd server
 OPEN .env
 
 ````sh
-PORT=3000
+PORT=3002
 MONGODB_URI=mongodb://localhost:27017/chatSocket
 TEST_MONGODB_URI=mongodb://localhost:27017/chatSocket
+URL=http://localhost:3000
 ``````
 
 CLIENT:
