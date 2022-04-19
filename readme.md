@@ -46,26 +46,39 @@ SERVER:
 ```sh
 cd server
 ```
-OPEN .env
+OPEN .env_template
 
 ````sh
 PORT=3002
+
+// URL CLIENT
+CLIENT=http://localhost:3000
+
+//MONGODB
 MONGODB_URI=mongodb://localhost:27017/chatSocket
-TEST_MONGODB_URI=mongodb://localhost:27017/chatSocket
-URL=http://localhost:3000
+
 ``````
+
+Modify the file if necessary and save it with the name .env
+
+
 
 CLIENT:
 
 ```sh
 cd client
 ```
-OPEN .env
+OPEN .env_template
 
 ````sh
-URL= "http://localhost:3002"
-URL_DEV= "http://localhost:3002"
+
+// URL API SOCKET 
+REACT_APP_URL= "http://127.0.0.1:3002"
+
 ``````
+
+Modify the file if necessary and save it with the name .env
+
 RUN SERVER:
 
 ````sh
