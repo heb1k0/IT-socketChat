@@ -7,10 +7,8 @@ const { connectMongo } = require('./config');
 const cors = require('cors');
 require('dotenv').config()
 
-
 // Controllers //
 
-;
 const { Register, Login, CheckToken, RegisterGoogle } = require('./controllers/users')
 var controller = require('./controllers/sockets');
 
