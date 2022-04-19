@@ -2,9 +2,6 @@ const { createRoom, listRooms } = require("./rooms");
 const { listChats, createChat } = require("./chats");
 const { Register, RegisterGoogle, Login, CheckToken } = require("./users")
 
-const Chat = require('../models/chats');
-const jwt = require('jsonwebtoken');
-const User = require("../models/users");
 var RoomsChat = [];
 var UsersOnline = [];
 
@@ -14,8 +11,6 @@ module.exports.respond = function (socket) {
     let UserInterface;
 
     socket.on("chat:refresh", async () => {
-
-
         try {
             let chats = await listChats();
             let room = await listRooms();
@@ -25,33 +20,6 @@ module.exports.respond = function (socket) {
             console.log(e.message)
         }
     });
-
-
-    // socket.on("user:connect", (user) => {
-    //     let id;
-    //     // console.log("Nuevo user", user)
-    //     if (!user.isGoogle) {
-    //         id = user.idMongo;
-    //     } else {
-    //         var verified = jwt.verify(user.tokenUser, "secretKey123")
-    //         id = verified.id
-    //     }
-
-    //     console.log("UsersOnline", UsersOnline)
-
-    //     // Comprobar si exist el user en el array de users
-    //     if (!UsersOnline.find((userOnline) => userOnline.idUser === user.idUser)) {
-    //         console.log("No existeee")
-    //         user.room = { id: 0, name: "General" };
-    //         user.id = socket.id;
-    //         UsersOnline.push(user);
-    //     }else{
-    //        console.log("existeeee")
-    //     }
-    //     UserInterface = user;
-    //     UserInterface.idMongo = id;
-    //     socket.emit("user:connectRES", UsersOnline);
-    // });
 
     socket.on("rooms", async (e) => {
         try {
@@ -67,14 +35,9 @@ module.exports.respond = function (socket) {
     socket.on("send_message", async (e) => {
 
         let idRoom;
-        if (!e.room || e.room.room === "general") {
-            idRoom = "general";
-            socket.broadcast.emit("receive_message", { mensaje: e.mensaje, user: UserInterface });
-        } else {
-            //enviar socket room
-            idRoom = e.room.room;
-            socket.broadcast.to(e.room.room).emit("receive_message", { mensaje: e.mensaje, user: UserInterface });
-        }
+        console.log("mensaje",e)
+        idRoom = e.room.room;
+        socket.broadcast.to(e.room.room).emit("receive_message", { mensaje: e.mensaje, user: UserInterface });
 
         createChat({ username: UserInterface.username, idUser: UserInterface.idMongo, idRoom, mensaje: e.mensaje })
     });
@@ -83,19 +46,27 @@ module.exports.respond = function (socket) {
         //Buscar usaurio en UsersOnline y actualizar la room
         var user = UsersOnline.find((userOnline) => userOnline.idSocket === socket.id);
 
+        console.log("JOIN ROOM llega", e)
+
         if (user) {
 
+
             if (e.exit) {
+
                 socket.leave(user.room.room)
-                if (user) user.room = { room: e.room, name: e.name };
+                if (user) user.room = { room: "General", name: "General"};
+                socket.join("General");
             } else {
                 if (user) user.room = { room: e.room, name: e.name };
-                user.room ? socket.join(user.room.room) : console.log("No hay room")
-                console.log(UserInterface)
+                socket.leave("General");
+                socket.join(e.room)
+
             }
 
+            
+
         }
-        e.exit ? socket.levave : socket.join(e.room)
+
         socket.emit("room:joinRES", user);
         socket.broadcast.emit("room:joinRES", user);
         socket.emit("user:connectRES", UsersOnline);
@@ -129,7 +100,6 @@ module.exports.respond = function (socket) {
 
         });
 
-        console.log(UsersOnline)
         socket.broadcast.emit("user:disconnect", UsersOnline);
     });
 
@@ -140,29 +110,19 @@ module.exports.respond = function (socket) {
     });
 
     socket.on("chat:changeRoom", async (data) => {
-        console.log("datas",data.userRoom.room);
         let chats = await listChats(data.userRoom.room)
-        if(chats){
-            console.log("chats", chats);
-        }else{
-            console.log("chats", "no hay chats");
-        }
-
         socket.emit("chat:changeRoom", { chats })
     })
 
     socket.on("user:logout", (e) => {
         //borrar objeto de UsersOnline
         let user = UsersOnline.find((userOnline) => userOnline.idSocket === socket.id);
-        // console.log("Array users", UsersOnline)
         if (user) {
             let index = UsersOnline.indexOf(user);
             UsersOnline.splice(index, 1);
             console.log("Acaba", UsersOnline)
         }
-        // console.log("emitimos", UsersOnline)
         socket.broadcast.emit("user:LogoutRES", UsersOnline);
-        // console.log("emit")
 
     })
 
@@ -171,7 +131,6 @@ module.exports.respond = function (socket) {
         try {
             let user = await RegisterGoogle(req);
             socket.emit("user:loginGoogleRES", { user })
-            console.log("UserGoogle", user)
             if (UsersOnline.find(userOnline => userOnline.email === user.email)) {
                 //Lo borramos
                 let index = UsersOnline.indexOf(user);
@@ -205,6 +164,7 @@ module.exports.respond = function (socket) {
             if (User.msj) {
                 return socket.emit("user:LoginRES", { error: true })
             } else {
+                socket.join("General");
                 socket.emit("user:LoginRES", User)
                 newOnlineUser(User);
             }
@@ -230,10 +190,11 @@ module.exports.respond = function (socket) {
     var newOnlineUser = (user) => {
 
         let copy = user._doc ? user._doc : user;
-        let room = { room: "general", name: "General" };
+        let room = { room: "General", name: "General" };
         UserInterface = { idSocket: socket.id, room, ...copy };
         if (UsersOnline.push(UserInterface)) console.log("Push user IF", UserInterface)
         socket.emit("user:connectRES", UsersOnline);
+        socket.join("General");
         socket.broadcast.emit("user:connectRES", UsersOnline);
 
     }

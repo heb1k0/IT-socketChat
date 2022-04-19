@@ -14,7 +14,7 @@ var controller = require('./controllers/sockets');
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.URL,
+    origin: [process.env.CLIENT],
     methods: ["GET", "POST"]
   }
 });
