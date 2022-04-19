@@ -13,7 +13,6 @@ exports.createRoom = async (req) =>{
         return result;
 
     }catch(err){    
-        console.log(err.message);
         return err.message;
     }
 
@@ -23,9 +22,7 @@ exports.listRooms = async () =>{
     
        try{
             return await Room.find();
-    
         }catch(err){    
-            console.log(err.message);
             return err.message;
         }
     

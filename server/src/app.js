@@ -5,6 +5,8 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const { connectMongo } = require('./config');
 const cors = require('cors');
+require('dotenv').config()
+
 
 // Controllers //
 
@@ -14,7 +16,7 @@ var controller = require('./controllers/sockets');
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://139.59.149.58:3000',
+    origin: [process.env.CLIENT],
     methods: ["GET", "POST"]
   }
 });
@@ -29,7 +31,7 @@ app.post('/checkToken', (req, res) => CheckToken(req.body, res));
 app.post('/registergoogle', (req, res) => RegisterGoogle(req.body, res))
 
 
-server.listen(3002, async () => {
+server.listen(process.env.PORT, async () => {
   try {
     await connectMongo();
     console.log("Server Running");
